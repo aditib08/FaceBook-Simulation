@@ -1,0 +1,213 @@
+import java.util.*;
+import java.io.*;
+
+public class FaceBookSimulation 
+{
+   public static void main(String[] args) throws FileNotFoundException 
+   {
+      FaceBook fb = new FaceBook();
+      Scanner scan = new Scanner(System.in);
+      
+      //preforms corresponding method based on the user specified command
+      while (true) {
+         String input = scan.next();
+         if (input.equals("P")) {
+            fb.p(scan.next());
+         } else if (input.equals("F")) {
+            String name1 = scan.next();
+            String name2 = scan.next();
+            fb.f(name1, name2);
+         } else if (input.equals("U")) {
+            String name1 = scan.next();
+            String name2 = scan.next();
+            fb.u(name1, name2);
+         } else if (input.equals("L")) {
+            fb.l(scan.next());
+         } else if (input.equals("Q")) {
+            String name1 = scan.next();
+            String name2 = scan.next();
+            fb.q(name1, name2);
+         } else if (input.equals("R")) {
+            fb.r(scan.nextInt());
+         } else if (input.equals("X")) {
+            break;
+         } else {
+            System.out.println("Invalid input");
+         }
+      }       
+      scan.close();
+   }    
+}//FaceBookSimulation
+
+class FaceBook
+{ 
+   private Map<String, Person> users = new HashMap<String, Person>();
+   private Map<String, Boolean> friends = new HashMap<String, Boolean>();
+   
+   
+   //precondition: name is a valid string
+   //postcondition: adds given name to the users map
+   public void p(String name){
+      if(users.get(name) != null)//checks if person already exists 
+         return;
+      users.put(name, new Person(name)); //adds person to users map
+   }//p
+   
+   //precondition: name1 and name2 are valid strings
+   //postcondition: adds name1 and name2 to their respective friends lists & updates friends map
+   public void f(String name1, String name2)
+   {
+    if (name1.equals(name2))//checks if names are the same
+        return;
+    
+    //adds person to each others list
+    users.get(name1).addFriend(users.get(name2));
+    users.get(name2).addFriend(users.get(name1));
+    
+    friends.put(name1 + "*" + name2, true);//add friendship to the 'friends' map
+   }//f
+   
+   //precondition: name1 and name2 are valid strings
+   //postcondition: removes name1 and name2 from their respective friends lists & updates friends map
+   public void u(String name1, String name2)
+   {
+   //checks if the names are the same or if the friendship doesn't exist 
+    if (name1.equals(name2) || friends.get(name1 + "*" + name2) != true)
+        return;
+    
+    //removes person from each others list
+    users.get(name1).unFriend(users.get(name2));
+    users.get(name2).unFriend(users.get(name1));
+    
+    friends.remove(name1 + "*" + name2);//removes friendship from 'friends' map
+   }//u
+   
+   //precondition: name is a valid string
+   //postcondition: prints out the friends of the specified person(name) 
+   public void l(String name)
+   {
+      System.out.print("Friend(s): ");
+      for(Person f: users.get(name).getFriends())//iterates through person's 'friends' list
+         System.out.print(f.getName() + " ");
+      System.out.println();
+   }//l
+
+   //precondition: name1 and name2 are valid strings
+   //postcondition: prints whether name1 and name2 are friends
+   public void q(String name1, String name2)
+   {
+   if (friends.get(name1 + "*" + name2) != null)//checks if friendship exists 
+        System.out.println("Yes, they are friends");
+    else
+        System.out.println("No, they are not friends");
+   }//q
+   
+   //precondition: count is a valid integer
+   //postcondition: creates 'count' random names(all length 5) and adds them to a text file 
+   public void r(int count) throws FileNotFoundException {
+      File person = new File("person.txt"); //creates new text file
+      PrintStream printStream = new PrintStream(person);
+   
+      for (int i = 0; i < count; i++) { 
+         String name = generateRandomName(); //generates a random name based on the user specified number
+         p(name);
+         printStream.println("P " + name); //prints to persons file the generated name
+         System.out.print(name + " ");
+      }
+   
+      printStream.close();
+   }
+   
+   //precondition: none
+   //postcondition: returns random String name of length 5
+   private String generateRandomName() {
+      String name = "";
+      for (int i = 0; i < 5; i++) {
+         name += (char) ((int)(Math.random() * 26) + 'a'); //generates a random lowercase character
+      }
+      return name;
+   }
+      
+}//Facebook
+   
+   
+class Person
+{
+   private final String NAME;
+   private List<Person> friends;
+   
+   //precondition: name is not null and represents a name
+   //postcondition: creates a person object with given name and intializes friends list
+   public Person(String name){
+      this.NAME = name;
+      friends = new LinkedList<Person>();
+   }//Person
+   
+   //precondition: friend is valid
+   //post condition: adds given friend to their 'friends' list
+   public void addFriend(Person friend)
+   {
+      friends.add(friend);
+   }//addFriend
+   
+   //precondition: friend is valid
+   //postcondition: removes given friend from their 'friends' list 
+   public void unFriend(Person friend)
+   {
+      friends.remove(friend);
+   }//unFriend
+   
+   //precondition: none
+   //postcondition: returns name of the person
+   public String getName()
+   {
+      return NAME;
+   }//getName
+   
+   //precondition: none
+   //postcondition: returns a list representation of the person's friends
+   public List<Person> getFriends()
+   {
+      return friends;
+   }//getFriends()
+}//Person
+
+
+/*
+
+PROGRAM OUTPUTS: 
+ P Sam
+ P Liza
+ P Mark
+ P Amy
+ F Liza Amy
+ F Liza Mark
+ F Amy Sam
+ L Amy
+ Friend(s): Liza Sam 
+ L Sam
+ Friend(s): Amy 
+ U Liza Amy
+ L Amy
+ Friend(s): Sam 
+ Q Liza Mark
+ Yes, they are friends
+ P Edmund
+ P Esther
+ F Edmund Mark
+ F Mark Esther 
+ L Mark
+ Friend(s): Liza Edmund Esther 
+ Q Liza Amy
+ No, they are not friends
+ R 10
+ inqek oiofr pxhbh basvm crbqv vmctg rjhbx qgcin eqsga eosfk 
+ P inqek
+ P oiofr
+ F inqek oiofr
+ Q inqek oiofr
+ Yes, they are friends
+ X
+ 
+*/
+
